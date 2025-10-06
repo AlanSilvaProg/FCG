@@ -1,0 +1,38 @@
+@StudyCaseWebApi_HostAddress = http://localhost:5288
+@jwt_admin = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhZG1pbi5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbiIsImp0aSI6ImIwNzVlZGYzLTJkMDktNDIyYy1hNTA5LTNjZWM2OTVkMTNmOSIsImV4cCI6MTc1OTcxMzc2MywiaXNzIjoiU3R1ZHlDYXNlV2ViQXBpSXNzdWVyIn0.qiKhCFD1z1q2ylK5ruiuv-7UAl5MVaNstn8R8s6OaaI
+
+POST http://localhost:5288/api/Authentication/Login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "email": "admin@admin.com",
+  "password": "fcgAdmin123.",
+  "isAdmin": true
+}
+
+###
+
+POST http://localhost:5288/api/UserCreator/CreateUser
+Content-Type: application/json
+Authorization: Bearer {{jwt_admin}}
+
+{
+  "username": "Alan",
+  "password": "Alan123.dasdasd",
+  "email": "alanfs1010@gmail.com",
+  "isAdmin": true
+}
+
+###
+
+POST http://localhost:5288/api/UserCreator/CreateUser
+Content-Type: application/json
+Authorization: Bearer {{jwt_admin}}
+
+{
+  "username": "Alanfs",
+  "password": "Alan123.",
+  "email": "alanfs101@gmail.com",
+  "isAdmin": false
+}
