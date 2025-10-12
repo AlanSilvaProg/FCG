@@ -2,12 +2,22 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using StudyCaseWebApi.Extensions;
+using StudyCaseWebApi.Queries;
 using StudyCaseWebApi.Services;
+using StudyCaseWebApi.Services.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen();   
+
+#region Redis
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration["Redis:ConnectionString"];
+    options.InstanceName = builder.Configuration["Redis:AppName"];
+});
+#endregion
 
 #region JWT
 builder.Services.AddAuthentication(options =>
@@ -43,6 +53,7 @@ builder.Services.AddSingleton<IDataBaseService, PostgreDbService>();
 
 #endregion
 
+builder.Services.AddGraphQLServer().AddQueryType<AuthQuery>().AddObjectType<Users>().AddObjectType<UserGames>();
 builder.Services.AddControllers();
 var app = builder.Build();
 
@@ -56,6 +67,7 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAuthenticationValidation();
+app.MapGraphQL();
 app.MapControllers();
 app.UseHttpsRedirection();
 

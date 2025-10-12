@@ -12,7 +12,9 @@ public class ProjectDb() : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<Users>()
-            .HasKey(u => u.id);
+            .HasOne(u => u.userGames)
+            .WithOne(g => g.users)
+            .HasForeignKey<UserGames>(g => g.user_id);
         modelBuilder.Entity<GameRegistry>()
             .HasKey(u => u.id);
         modelBuilder.Entity<UserGames>()

@@ -1,5 +1,5 @@
 @StudyCaseWebApi_HostAddress = http://localhost:5288
-@jwt_admin = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhZG1pbi5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbiIsImp0aSI6ImIwNzVlZGYzLTJkMDktNDIyYy1hNTA5LTNjZWM2OTVkMTNmOSIsImV4cCI6MTc1OTcxMzc2MywiaXNzIjoiU3R1ZHlDYXNlV2ViQXBpSXNzdWVyIn0.qiKhCFD1z1q2ylK5ruiuv-7UAl5MVaNstn8R8s6OaaI
+@jwt_admin = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhZG1pbi5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbiIsImp0aSI6IjBkMTQ0ZDBlLWZjM2UtNGFkYS1iNDk2LTQ3OWVkYmNiNDE2MSIsImV4cCI6MTc2MDMwMDU4OSwiaXNzIjoiU3R1ZHlDYXNlV2ViQXBpSXNzdWVyIn0.DAps0rIjgOKfpJEzWdyMMuhKsugnX912C_jHn5qBlio
 
 POST http://localhost:5288/api/Authentication/Login
 Content-Type: application/json
@@ -13,13 +13,24 @@ Content-Type: application/json
 
 ###
 
+POST http://localhost:5288/api/Authentication/Login
+Content-Type: application/json
+
+{
+  "username": "Alan",
+  "password": "Alan123.",
+  "email": "alanfs1010@gmail.com"
+}
+
+###
+
 POST http://localhost:5288/api/UserCreator/CreateUser
 Content-Type: application/json
 Authorization: Bearer {{jwt_admin}}
 
 {
   "username": "Alan",
-  "password": "Alan123.dasdasd",
+  "password": "Alan123.",
   "email": "alanfs1010@gmail.com",
   "isAdmin": true
 }
@@ -36,3 +47,37 @@ Authorization: Bearer {{jwt_admin}}
   "email": "alanfs101@gmail.com",
   "isAdmin": false
 }
+
+###
+
+POST http://localhost:5288/api/GameCreator/RegisterNewGame
+Content-Type: application/json
+Authorization: Bearer {{jwt_admin}}
+
+{
+  "id":  "ac72b52c-604f-46e2-b64c-a29e7e26f136",
+  "name": "New Game",
+  "base_price": "0.5",
+  "active": false
+}
+
+###
+
+POST http://localhost:5288/graphql
+Content-Type: application/json
+
+{
+  "query": "query { users { id username } }"
+}
+
+###
+
+POST http://localhost:5288/graphql
+Content-Type: application/json
+
+{
+  "query": "query { userGames(id: \"a4adfbed-4146-4980-89f5-6488c447dc2e\") { id username userGames { user_id game_ids } } }"
+}
+
+###
+

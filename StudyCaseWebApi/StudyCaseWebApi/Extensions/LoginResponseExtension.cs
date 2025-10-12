@@ -102,9 +102,7 @@ public static async Task<Response> CreateAccount(this LoginResponse loginRespons
         }
         catch (Exception e)
         {
-            Console.WriteLine($"[Error] : {e.Message}");
-            Console.WriteLine($"[Error] : {e.Message} \n [Inner Exception] : {e.InnerException}");
-            return new Response(false, string.Empty, e.Message);
+            return new Response(false, string.Empty, e.InnerException?.Message ?? e.Message);
         }
         
         
