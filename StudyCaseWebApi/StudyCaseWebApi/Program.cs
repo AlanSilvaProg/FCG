@@ -9,7 +9,24 @@ using StudyCaseWebApi.Services.Entities;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();   
+builder.Services.AddSwaggerGen(c => 
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
+    { 
+        Title = "Fiap Cloud Games", 
+        Version = "v1",
+        Description = "A Web API for the Fiap Cloud Games project",
+        Contact = new Microsoft.OpenApi.Models.OpenApiContact
+        {
+            Name = "API Support",
+            Email = "alanfs1010@gmail.com"
+        }
+    });
+    
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = System.IO.Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
+});
 
 #region Redis
 builder.Services.AddStackExchangeRedisCache(options =>

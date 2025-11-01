@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using StudyCaseWebApi.Models;
 using StudyCaseWebApi.Services;
 using StudyCaseWebApi.Services.Entities;
+using Microsoft.AspNetCore.Identity;
 
 namespace StudyCaseWebApi.Extensions;
 
@@ -16,7 +17,9 @@ public static class LoginResponseExtension
     private static readonly Regex s_Regex = new Regex(
         @"^(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$",
         RegexOptions.Compiled);
-    
+
+    private static readonly PasswordHasher<string> _passwordHasher = new PasswordHasher<string>();
+
     public static bool IsValidPassword(this LoginResponse loginResponse)
     {
         if (string.IsNullOrEmpty(loginResponse.Password))
@@ -38,13 +41,14 @@ public static class LoginResponseExtension
         }
     }
 
-#region  Jwt
+    #region Jwt
 
-    private static string GetJwtTokenUsingEmail(this LoginResponse loginResponse, string policy, string secretKey, string issuer)
+    private static string GetJwtTokenUsingEmail(this LoginResponse loginResponse, string policy, string? secretKey,
+        string? issuer)
     {
-        return GenerateJwtToken(loginResponse.Email, policy, secretKey, issuer);
+        return GenerateJwtToken(loginResponse.Email, policy, secretKey ?? "", issuer ?? "");
     }
-    
+
     private static string GenerateJwtToken(string username, string role, string secretKey, string issuer)
     {
         var claims = new[]
@@ -65,58 +69,66 @@ public static class LoginResponseExtension
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
-    
-#endregion
 
-#region Account Creation
+    #endregion
 
-public static async Task<Response> CreateAccount(this LoginResponse loginResponse, IConfiguration configuration,
-    IDataBaseService dataBaseService)
-{
-    try
+    #region Account Creation
+
+    public static async Task<Response> CreateAccount(this LoginResponse loginResponse, IConfiguration configuration,
+        IDataBaseService dataBaseService)
     {
-        string token = string.Empty;
         try
         {
-            if (loginResponse.IsValidEmail())
+            string token = string.Empty;
+            try
             {
-                token = loginResponse.GetJwtTokenUsingEmail(loginResponse.IsAdmin ? "Admin" : "User", configuration["Jwt:Key"], configuration["Jwt:Issuer"]);
+                if (loginResponse.IsValidEmail())
+                {
+                    token = loginResponse.GetJwtTokenUsingEmail(loginResponse.IsAdmin ? "Admin" : "User",
+                        configuration["Jwt:Key"], configuration["Jwt:Issuer"]);
+                }
             }
-        }
-        catch (Exception exception)
-        {
-            return new Response(false, string.Empty, "Invalid Email");
-        }
+            catch (Exception exception)
+            {
+                return new Response(false, string.Empty, "Invalid Email");
+            }
 
-        try
-        {
-            var existentUser = dataBaseService.Users().AsNoTracking().FirstOrDefault(u => u.email == loginResponse.Email);
+            try
+            {
+                var existentUser = dataBaseService.Users().AsNoTracking()
+                    .FirstOrDefault(u => u.email == loginResponse.Email);
 
-            if (existentUser != null)
-                return new Response(false, string.Empty, $"Email has already been used");
-                                
-            dataBaseService.Users().Add(new Users(Guid.NewGuid(), loginResponse.Username, loginResponse.Email,
-                loginResponse.Password, loginResponse.IsAdmin));
-            var result = await dataBaseService.SaveChangesAsync();
-            if (result == 0) throw new Exception("Data Base Save Changes async failed");
+                if (existentUser != null)
+                    return new Response(false, string.Empty, $"Email has already been used");
+
+                loginResponse = loginResponse with
+                {
+                    Password = HashPassword(loginResponse.Password)
+                };
+
+                dataBaseService.Users().Add(new Users(Guid.NewGuid(), loginResponse.Username, loginResponse.Email,
+                    loginResponse.Password, loginResponse.IsAdmin));
+                var result = await dataBaseService.SaveChangesAsync();
+                if (result == 0) throw new Exception("Data Base Save Changes async failed");
+            }
+            catch (Exception e)
+            {
+                return new Response(false, string.Empty, e.InnerException?.Message ?? e.Message);
+            }
+
+
+            return new Response(true, token, "Confirm email");
         }
-        catch (Exception e)
+        catch
         {
-            return new Response(false, string.Empty, e.InnerException?.Message ?? e.Message);
+            return new Response(false, string.Empty,
+                "Error while trying to create a new user. Please get in touch with support");
         }
-        
-        
-        return new Response(true, token, "Confirm email");
     }
-    catch
-    {
-        return new Response(false, string.Empty, "Error while trying to create a new user. Please get in touch with support");
-    }
-}
 
-#endregion
+    #endregion
 
-#region Login
+    #region Login
 
     public static async Task<Response> Login(this LoginResponse response, IConfiguration configuration,
         IDataBaseService dataBaseService)
@@ -128,9 +140,12 @@ public static async Task<Response> CreateAccount(this LoginResponse loginRespons
             var userByEmail = noTrackingUsers.FirstOrDefault(u => u.email == response.Email);
             if (userByEmail != null)
             {
-                if (response.Password == userByEmail.password)
+
+                if (VerifyPassword(userByEmail.password, response.Password))
                 {
-                    return new Response(true, response.GetJwtTokenUsingEmail(userByEmail.is_admin ? "Admin" : "User", configuration["Jwt:Key"], configuration["Jwt:Issuer"]), $"successfully logged in");
+                    return new Response(true,
+                        response.GetJwtTokenUsingEmail(userByEmail.is_admin ? "Admin" : "User",
+                            configuration["Jwt:Key"], configuration["Jwt:Issuer"]), $"successfully logged in");
                 }
 
                 return new Response(false, string.Empty, $"Incorrect password");
@@ -141,7 +156,7 @@ public static async Task<Response> CreateAccount(this LoginResponse loginRespons
         {
             return new Response(false, string.Empty, "Invalid username or email");
         }
-        
+
         var userByName = noTrackingUsers.Where(u => u.username == response.Username);
 
         if (!userByName.Any())
@@ -151,17 +166,29 @@ public static async Task<Response> CreateAccount(this LoginResponse loginRespons
 
         foreach (var userElement in userByName)
         {
-            if (userElement.password == response.Password)
+            if (VerifyPassword(userElement.password, response.Password))
             {
                 response = response with { Email = userElement.email };
                 return new Response(true,
-                    response.GetJwtTokenUsingEmail(userElement.is_admin ? "Admin" : "User", configuration["Jwt:Key"], configuration["Jwt:Issuer"]), $"successfully logged in");
+                    response.GetJwtTokenUsingEmail(userElement.is_admin ? "Admin" : "User", configuration["Jwt:Key"],
+                        configuration["Jwt:Issuer"]), $"successfully logged in");
             }
         }
-        
+
         return new Response(false, string.Empty, $"Invalid username or email");
     }
 
-#endregion
+    #endregion
+
+    private static string HashPassword(string password)
+    {
+        return _passwordHasher.HashPassword("DefaultUser", password);
+    }
+
+    private static bool VerifyPassword(string hashedPassword, string password)
+    {
+        var result = _passwordHasher.VerifyHashedPassword("DefaultUser", hashedPassword, password);
+        return result == PasswordVerificationResult.Success;
+    }
 
 }

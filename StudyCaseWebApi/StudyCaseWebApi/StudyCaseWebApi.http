@@ -1,5 +1,5 @@
 @StudyCaseWebApi_HostAddress = http://localhost:5288
-@jwt_admin = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbkBhZG1pbi5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbiIsImp0aSI6IjBkMTQ0ZDBlLWZjM2UtNGFkYS1iNDk2LTQ3OWVkYmNiNDE2MSIsImV4cCI6MTc2MDMwMDU4OSwiaXNzIjoiU3R1ZHlDYXNlV2ViQXBpSXNzdWVyIn0.DAps0rIjgOKfpJEzWdyMMuhKsugnX912C_jHn5qBlio
+@jwt_admin = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGFuYWFhQGFkbWluLmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkFkbWluIiwianRpIjoiN2RjOGNiMWItODljNy00ZTZjLThhYWYtNGI2MTUxODE5NTI1IiwiZXhwIjoxNzYxMDc3MTIwLCJpc3MiOiJTdHVkeUNhc2VXZWJBcGlJc3N1ZXIifQ.saY8k0qZVxFlDYJGJ6h4TfGT4h2DkYY-a2hOHndujsM
 
 POST http://localhost:5288/api/Authentication/Login
 Content-Type: application/json
@@ -17,9 +17,21 @@ POST http://localhost:5288/api/Authentication/Login
 Content-Type: application/json
 
 {
-  "username": "Alan",
-  "password": "Alan123.",
-  "email": "alanfs1010@gmail.com"
+  "username": "alanaaa",
+  "email": "alanaaa@admin.com",
+  "password": "fcgAdmin123."
+}
+
+###
+
+POST http://localhost:5288/api/Authentication/CreateAccount
+Content-Type: application/json
+
+{
+  "username": "alanaaa",
+  "email": "alanaaa@admin.com",
+  "password": "fcgAdmin123.",
+  "isAdmin": true
 }
 
 ###
@@ -42,9 +54,9 @@ Content-Type: application/json
 Authorization: Bearer {{jwt_admin}}
 
 {
-  "username": "Alanfs",
-  "password": "Alan123.",
-  "email": "alanfs101@gmail.com",
+  "username": "Alanfsaa",
+  "password": "Alan123.aaa",
+  "email": "alanfs101aaaaa@gmail.com",
   "isAdmin": false
 }
 
@@ -56,7 +68,7 @@ Authorization: Bearer {{jwt_admin}}
 
 {
   "id":  "ac72b52c-604f-46e2-b64c-a29e7e26f136",
-  "name": "New Game",
+  "name": "New Game aaa",
   "base_price": "0.5",
   "active": false
 }
